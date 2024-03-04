@@ -16,7 +16,7 @@ from .lib_layerdiffusion.utils import (
 from .lib_layerdiffusion.models import TransparentVAEDecoder
 
 
-layer_model_root = os.path.join(folder_paths.models_dir, "layer_model")
+layer_model_root = folder_paths.get_folder_paths("layer_models")
 load_layer_model_state_dict = load_torch_file
 
 
