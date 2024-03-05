@@ -6,6 +6,7 @@ import functools
 import folder_paths
 import comfy.model_management
 from comfy.model_patcher import ModelPatcher
+from folder_paths import get_folder_paths
 from comfy.utils import load_torch_file
 from comfy_extras.nodes_compositing import JoinImageWithAlpha
 from comfy.conds import CONDRegular
@@ -15,8 +16,10 @@ from .lib_layerdiffusion.utils import (
 )
 from .lib_layerdiffusion.models import TransparentVAEDecoder
 
-
-layer_model_root = folder_paths.get_folder_paths("layer_models")[0]
+if "layer_model" in folder_paths.folder_names_and_paths:
+    layer_model_root = get_folder_paths("layer_model")[0]
+else:
+    layer_model_root = os.path.join(folder_paths.models_dir, "layer_model")
 load_layer_model_state_dict = load_torch_file
 
 
@@ -32,7 +35,7 @@ def calculate_weight_adjust_channel(func):
             v = p[1]
 
             if isinstance(v, list):
-                v = (func(v[1:], v[0].clone(), key),)
+                v = (func(self, v[1:], v[0].clone(), key),)
 
             if len(v) == 1:
                 patch_type = "diff"
@@ -382,9 +385,9 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LayeredDiffusionApply": "Layer Diffusion Apply",
-    "LayeredDiffusionCondApply": "Layer Diffusion Cond Apply",
-    "LayeredDiffusionDiffApply": "Layer Diffusion Diff Apply",
-    "LayeredDiffusionDecode": "Layer Diffusion Decode",
-    "LayeredDiffusionDecodeRGBA": "Layer Diffusion Decode (RGBA)",
+    "LayeredDiffusionApply": "Layer Diffuse Apply",
+    "LayeredDiffusionCondApply": "Layer Diffuse Cond Apply",
+    "LayeredDiffusionDiffApply": "Layer Diffuse Diff Apply",
+    "LayeredDiffusionDecode": "Layer Diffuse Decode",
+    "LayeredDiffusionDecodeRGBA": "Layer Diffuse Decode (RGBA)",
 }
