@@ -2,13 +2,24 @@ import torch.nn as nn
 import torch
 import cv2
 import numpy as np
-import functools
 
 from tqdm import tqdm
 from typing import Optional, Tuple
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.unet_2d_blocks import UNetMidBlock2D, get_down_block, get_up_block
+
+
+def check_diffusers_version():
+    import diffusers
+    from packaging.version import parse
+
+    assert parse(diffusers.__version__) >= parse(
+        "0.25.0"
+    ), "diffusers>=0.25.0 requirement not satisfied. Please install correct diffusers version."
+
+
+check_diffusers_version()
 
 
 def zero_module(module):
@@ -289,14 +300,19 @@ class TransparentVAEDecoder:
         return median
 
     @torch.no_grad()
-    def decode_pixel(self, pixel, latent):
+    def decode_pixel(
+        self, pixel: torch.TensorType, latent: torch.TensorType
+    ) -> torch.TensorType:
         # pixel.shape = [B, C=3, H, W]
         assert pixel.shape[1] == 3
+        pixel_device = pixel.device
+        pixel_dtype = pixel.dtype
+
         pixel = pixel.to(device=self.load_device, dtype=self.dtype)
         latent = latent.to(device=self.load_device, dtype=self.dtype)
         # y.shape = [B, C=4, H, W]
         y = self.estimate_augmented(pixel, latent)
         y = y.clip(0, 1)
         assert y.shape[1] == 4
-        return y
-
+        # Restore image to original device of input image.
+        return y.to(pixel_device, dtype=pixel_dtype)
